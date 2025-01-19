@@ -3,6 +3,7 @@ import random
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+import torch
 
 '''Author : nvs - version 2.0'''
 
@@ -18,7 +19,7 @@ def midpt_to_corners(box):
     return [x1,y1,x2,y2]
 
 def bbox_calculator(image, txt_file_path):
-        bbox = []
+        bbox = []            
         image_height, image_width, _ = image.shape
         with open(txt_file_path, 'r') as file:
                 for line in file:
@@ -29,7 +30,38 @@ def bbox_calculator(image, txt_file_path):
                     width = float(data[3]) * image_width
                     height = float(data[4]) * image_height
                     bbox.append(midpt_to_corners([center_x,center_y,width,height]))
+            
         return bbox
+
+    
+def yolo_to_corners(labels, image_width, image_height, labeldim=2):
+    
+    if labeldim == 1:
+        
+        center_x = labels[0] * image_width
+        center_y = labels[1] * image_height
+        box_width = labels[2] * image_width
+        box_height = labels[3] * image_height
+
+        x1 = center_x - box_width / 2
+        y1 = center_y - box_height / 2
+        x2 = center_x + box_width / 2
+        y2 = center_y + box_height / 2
+
+        return torch.tensor([x1, y1, x2, y2])
+    
+    if labeldim==2:
+        center_x = labels[:, 0] * image_width
+        center_y = labels[:, 1] * image_height
+        box_width = labels[:, 2] * image_width
+        box_height = labels[:, 3] * image_height
+
+        x1 = center_x - box_width / 2
+        y1 = center_y - box_height / 2
+        x2 = center_x + box_width / 2
+        y2 = center_y + box_height / 2
+
+        return torch.stack([x1, y1, x2, y2], dim=1)
 
 def plot_bbox(image,label):
     """This function shows the bounding box on the image
@@ -53,17 +85,39 @@ def plot_bbox(image,label):
         txt_file_path = os.path.join(label, txt_file)
         bbox = bbox_calculator(image, txt_file_path)
     else:
-        if (type(image) == str) : 
+        if (type(image) == str): 
             image = cv2.imread(image)
         else : 
             image = np.asarray(image)
         bbox = label
     
     bbox = np.asarray(bbox)
-    x1, y1, x2, y2 = bbox[0]
-    color = (0, 0, 255) 
+    if bbox.ndim > 1:
+        x1, y1, x2, y2 = bbox[0]
+        color = (0, 0, 255)
+    else:
+        x1, y1, x2, y2 = bbox
+        color = (0, 255, 0)
+
+    x1, y1, x2, y2 = map(int, [x1, y1, x2, y2])
+     
     thickness = 2
     cv2.rectangle(image, (x1, y1), (x2, y2), color, thickness)
     plt.axis('off')
     plt.imshow(image);           
     return 
+
+
+def visualize_prediction(image_path, model):
+    
+    image = cv2.imread(image_path)
+    width, height = image.shape[:2]
+    resized_image = cv2.resize(image, (224, 224))
+    input_tensor = torch.tensor(resized_image).permute(2, 0, 1).unsqueeze(0).float()  # (B, C, H, W)
+    input_tensor = input_tensor / 255.0
+    input_tensor = input_tensor.to('cpu')
+    model.eval()
+    with torch.no_grad():
+        predictions = model(input_tensor).squeeze(0)
+    predictions_norm = yolo_to_corners(predictions, image_height=height, image_width=width, labeldim=1)
+    plot_bbox(image, predictions_norm)
