@@ -105,19 +105,50 @@ def plot_bbox(image,label):
     cv2.rectangle(image, (x1, y1), (x2, y2), color, thickness)
     plt.axis('off')
     plt.imshow(image);           
-    return 
+    return
 
 
-def visualize_prediction(image_path, model):
-    
+def visualize_prediction(image_path, labels_path, model):
     image = cv2.imread(image_path)
-    width, height = image.shape[:2]
+    orig_image = image.copy()
+    height, width = image.shape[:2]
     resized_image = cv2.resize(image, (224, 224))
     input_tensor = torch.tensor(resized_image).permute(2, 0, 1).unsqueeze(0).float()  # (B, C, H, W)
     input_tensor = input_tensor / 255.0
     input_tensor = input_tensor.to('cpu')
+
+    # Get predictions from the model
     model.eval()
     with torch.no_grad():
         predictions = model(input_tensor).squeeze(0)
     predictions_norm = yolo_to_corners(predictions, image_height=height, image_width=width, labeldim=1)
-    plot_bbox(image, predictions_norm)
+
+    # Check if corresponding label file exists
+    if labels_path:
+        # Extract the base name of the image file without extension
+        image_name = os.path.basename(image_path)
+        label_name = os.path.splitext(image_name)[0] + '.txt'
+        label_file_path = os.path.join(labels_path, label_name)
+
+        if os.path.exists(label_file_path):
+            with open(label_file_path, 'r') as file:
+                original_labels = []
+                for line in file:
+                    class_id, center_x, center_y, w, h = map(float, line.strip().split())
+                    original_labels.append([center_x, center_y, w, h])
+            original_labels = np.array(original_labels)
+            original_bboxes = yolo_to_corners(torch.tensor(original_labels), image_width=width, image_height=height, labeldim=2)
+            
+            for bbox in original_bboxes:
+                x1, y1, x2, y2 = map(int, bbox.tolist())
+                cv2.rectangle(orig_image, (x1, y1), (x2, y2), (0, 255, 0), 2)  # Green for original labels
+
+    # Plot predictions
+    x1, y1, x2, y2 = map(int, predictions_norm.tolist())
+    cv2.rectangle(orig_image, (x1, y1), (x2, y2), (0, 0, 255), 2)  # Red for predictions
+
+    # Display the image
+    plt.axis('off')
+    plt.imshow(cv2.cvtColor(orig_image, cv2.COLOR_BGR2RGB))
+    plt.show()
+    
