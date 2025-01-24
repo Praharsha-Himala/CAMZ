@@ -34,7 +34,7 @@ def bbox_calculator(image, txt_file_path):
         return bbox
 
     
-def yolo_to_corners(labels, image_width, image_height, labeldim=2):
+def midpt_to_corners(labels, image_width, image_height, labeldim=2):
     
     if labeldim == 1:
         
@@ -121,7 +121,7 @@ def visualize_prediction(image_path, labels_path, model):
     model.eval()
     with torch.no_grad():
         predictions = model(input_tensor).squeeze(0)
-    predictions_norm = yolo_to_corners(predictions, image_height=height, image_width=width, labeldim=1)
+    predictions_norm = midpt_to_corners(predictions, image_height=height, image_width=width, labeldim=1)
 
     # Check if corresponding label file exists
     if labels_path:
@@ -137,7 +137,7 @@ def visualize_prediction(image_path, labels_path, model):
                     class_id, center_x, center_y, w, h = map(float, line.strip().split())
                     original_labels.append([center_x, center_y, w, h])
             original_labels = np.array(original_labels)
-            original_bboxes = yolo_to_corners(torch.tensor(original_labels), image_width=width, image_height=height, labeldim=2)
+            original_bboxes = midpt_to_corners(torch.tensor(original_labels), image_width=width, image_height=height, labeldim=2)
             
             for bbox in original_bboxes:
                 x1, y1, x2, y2 = map(int, bbox.tolist())
