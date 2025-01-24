@@ -25,3 +25,4 @@ def plot_loss_curves(file_path):
     # Display the plot
     plt.grid()
     plt.show()
+    
