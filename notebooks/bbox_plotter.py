@@ -34,7 +34,7 @@ def bbox_calculator(image, txt_file_path):
         return bbox
 
     
-def midpt_to_corners(labels, image_width, image_height, labeldim=2):
+def yolo_to_corners(labels, image_width, image_height, labeldim=2):
     
     if labeldim == 1:
         
