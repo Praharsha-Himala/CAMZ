@@ -49,7 +49,7 @@ def process_video():
     model = load_checkpoint(r"D:\Praharsha\code\CAMZ\models\model_history\1.0-CNN\CNN_checkpoint.pth.tar", CNNModel)
 
     # Process and save results inside result folder
-    predictions = process_video_with_model(video_path, model, trim_seconds=10, output_dir=result_folder)
+    predictions = process_video_with_model(video_path, model, trim_seconds=10, output_dir=result_folder, device='cuda')
     write_predictions_to_csv(predictions, video_path, result_folder) # This will save in the same folder as video_path
 
 
