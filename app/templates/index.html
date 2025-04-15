@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CAMZ App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="content">
+            <div id="bubble-container"></div>
+
+            <!-- Top-left logo -->
+            <img src="{{ url_for('static', filename='DIL.png') }}" class="corner-logo top-left" alt="DIL Logo">
+
+            <!-- Top-right logo -->
+            <img src="{{ url_for('static', filename='MNL.png') }}" class="corner-logo top-right" alt="MNL Logo">
+
+            <!-- Header -->
+            <div class="header">
+                <h1>CAMZ</h1>
+                <p class="subtext">Clustering based Analysis of Motion for Zebrafish Anxiety Detection</p>
+            </div>
+
+            <!-- Video Input & Preview -->
+            <div class="video-section">
+                <form id="analysisForm" enctype="multipart/form-data">
+                    <input type="file" id="videoInput" name="video" accept="video/*" required>
+                    <video id="preview" controls style="display:none; margin-top: 20px;"></video>
+
+                    <div class="start-button-container">
+                        <button type="submit" class="start-analysis-btn">Start Analysis</button>
+                    </div>
+                </form>
+
+                <!-- Status Message -->
+                <div id="status" style="display:none; margin-top: 20px;"></div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <p>
+                    Developed by
+                    <strong><a href="https://sites.google.com/iisertvm.ac.in/dil-lab/home" target="_blank">Deep Intelligence Learning Lab</a></strong>
+                    & 
+                    <strong><a href="https://amruthaswaminathan.wixsite.com/molneurodev" target="_blank">Molecular Neuro Development Lab</a></strong>
+                </p>
+                <p>
+                    <strong><a href="https://www.iisertvm.ac.in/" target="_blank">Indian Institute of Science Education and Research, Thiruvananthapuram, India.</a></strong>
+                </p>
+                <p>&copy; 2025 CAMZ Project. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Bubble Script -->
+    <script>
+        function createBubble() {
+            const bubble = document.createElement('div');
+            const size = Math.random() * 40 + 10;  // Random size between 10px and 50px
+            bubble.className = 'bubble';
+            bubble.style.width = `${size}px`;
+            bubble.style.height = `${size}px`;
+
+            // Randomize horizontal position (left to right)
+            bubble.style.left = `${Math.random() * 100}vw`;
+
+            // Position the bubble just below the visible screen area to start
+            bubble.style.bottom = `-50px`;
+
+            // Randomize the animation duration (speed of movement)
+            const animationDuration = Math.random() * 10 + 5;  // Between 5 to 15 seconds
+            bubble.style.animationDuration = `${animationDuration}s`;
+
+            // Debug: Log bubble creation with duration
+            console.log(`Creating bubble with duration ${animationDuration}s`);
+
+            // Append the bubble to the container
+            document.getElementById('bubble-container').appendChild(bubble);
+
+            // Remove the bubble after the animation completes
+            setTimeout(() => {
+                bubble.remove();
+                console.log('Bubble removed');
+            }, animationDuration * 1000);  // Remove after the duration of the animation
+        }
+
+        // Create a new bubble every 400ms
+        setInterval(createBubble, 400);
+    </script>
+
+    <!-- Video Upload Script -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Video upload handling
+            document.getElementById('videoInput').addEventListener('change', function (e) {
+                const file = e.target.files[0];
+                const video = document.getElementById('preview');
+                const submitBtn = document.querySelector('.start-analysis-btn');
+                const statusDiv = document.getElementById('status');  // Status message div
+                
+                // Reset the status message when a new video is selected
+                statusDiv.innerHTML = '';  // Clear previous status message
+                
+                // Reset button state
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('processing', 'success');  // Remove any previous state
+                submitBtn.innerHTML = 'Start Analysis';  // Reset button text
+                
+                if (file) {
+                    const url = URL.createObjectURL(file);
+                    video.src = url;
+                    video.load();
+            
+                    video.onloadeddata = function () {
+                        console.log("Video loaded successfully.");
+                        video.style.display = 'block';
+                    };
+            
+                    video.onerror = function() {
+                        console.log("Error loading video.");
+                    };
+                }
+            });
+            
+            // Form submission handling
+            document.getElementById('analysisForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+                const submitBtn = e.target.querySelector('button[type="submit"]');
+                const statusDiv = document.getElementById('status');
+                
+                // Change button state to show processing
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = 'Processing... <div class="spinner"></div>';
+                submitBtn.classList.add('processing');
+                
+                // Make sure the status div remains visible during the process
+                statusDiv.style.display = 'block';
+                statusDiv.innerHTML = '';  // Clear any previous success/error message
+                
+                const formData = new FormData();
+                const videoFile = document.getElementById('videoInput').files[0];
+            
+                if (!videoFile) {
+                    statusDiv.innerHTML = '<div class="error-message">Please upload a video first.</div>';
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'Start Analysis';
+                    return;
+                }
+            
+                formData.append("video", videoFile);
+            
+                fetch("/process", {
+                    method: "POST",
+                    body: formData,
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        statusDiv.innerHTML = `<div class="error-message">${data.error}</div>`;
+                    } else {
+                        statusDiv.innerHTML = ` 
+                            <div class="success-message">
+                                ${data.message}
+                            </div>
+                        `;
+                        // Change button to success message
+                        submitBtn.innerHTML = 'Success!';
+                        submitBtn.classList.add('success');
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    statusDiv.innerHTML = '<div class="error-message">Error occurred during processing.</div>';
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'Start Analysis';
+                });
+        
+                // Poll for the completion status of the process
+                let processCompleteInterval = setInterval(() => {
+                    fetch('/get_status')
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.message && data.message.includes("Processing completed successfully")) {
+                                // Stop the interval once the processing is complete
+                                clearInterval(processCompleteInterval);
+                                statusDiv.innerHTML = `<div class="status-message">${data.message}</div>`;
+                                submitBtn.innerHTML = 'Success!';
+                            }
+                        })
+                        .catch(error => console.error('Error checking process completion:', error));
+                }, 1000);
+            });
+        });
+        
+    </script>
+
+</body>
+</html>
