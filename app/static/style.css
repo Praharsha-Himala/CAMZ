@@ -1,0 +1,265 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+    background-color: #d4edf9;
+    color: #333;
+    text-align: center;
+}
+
+.wrapper {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 60px;
+}
+
+h1 {
+    color: #2c3e50;
+    font-size: 56px;
+    letter-spacing: 10px;
+    margin: 20px 0 10px;
+    font-weight: bold;
+    z-index: 1;
+}
+
+.subtext {
+    font-size: 18px;
+    color: #888888;
+    margin-bottom: 40px;
+    font-style: italic;
+    z-index: 1;
+}
+
+.corner-logo {
+    position: absolute;
+    width: 200px;
+    height: auto;
+    z-index: 10;
+}
+
+.top-left {
+    top: 20px;
+    left: 20px;
+    width: 180px;
+    
+}
+
+.top-right {
+    top: 20px;
+    right: 20px;
+    width: 250px;
+}
+
+input[type="file"] {
+    background-color: #ffffff;
+    border: 2px solid #4682b4;
+    border-radius: 6px;
+    padding: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+input[type="file"]:hover {
+    border-color: #5f9ea0;
+    background-color: #f0f8ff;
+}
+
+#bubble-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    background-color: rgba(0, 0, 0, 0.1); /* Temporary background color */
+    
+}
+
+
+.bubble {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.7);
+    animation: floatUp linear infinite;
+    z-index: -1;  /* Ensure individual bubbles stay behind */
+}
+
+.video-section {
+    position: relative;
+    z-index: 1; /* Ensure video appears above the background bubbles */
+}
+
+#preview {
+    width: 450px;
+    height: 300px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+
+.bubble:hover {
+    transform: scale(1.5);
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.bubble {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.7);
+    animation: floatUp linear infinite;
+    z-index: -1;  /* Ensure individual bubbles stay behind the content */
+}
+
+@keyframes floatUp {
+    from {
+        transform: translateY(0);  /* Start from below the screen */
+        opacity: 1;
+    }
+    to {
+        transform: translateY(-100vh);  /* Move upwards off-screen */
+        opacity: 0.2;
+    }
+}
+
+.footer {
+    background-color: #1c2e4a;
+    color: #e0e0e0;
+    text-align: center;
+    font-size: 14px;
+    padding: 5px 0;
+    width: 100%;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.footer-content p {
+    margin: 5px 0;
+    line-height: 1.6;
+}
+
+.footer a {
+    color: #ffffff;
+    text-decoration: underline;
+    transition: color 0.3s ease;
+}
+
+.footer a:hover {
+    color: #a0cfff;
+}
+
+/* Button Styles */
+.start-analysis-btn {
+    background-color: #007bff;
+    color: white;
+    padding: 15px 30px;
+    font-size: 18px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.3s ease;
+    margin-top: 20px;
+    position: relative; /* For positioning the spinner */
+    display: inline-flex;
+    align-items: center; /* Vertically center the text and spinner */
+    justify-content: center; /* Center both text and spinner */
+}
+
+/* Hover effect */
+.start-analysis-btn:hover {
+    background-color: #0056b3;
+}
+
+/* Disabled state (when button is inactive) */
+.start-analysis-btn:disabled {
+    background-color: #ddd;
+    cursor: not-allowed;
+}
+
+/* Spinner animation for processing state */
+.start-analysis-btn.processing {
+    background-color: #ffcc00;  /* Change color to yellow */
+    color: white;  /* Ensure text is visible */
+    pointer-events: none;  /* Prevent clicks */
+    padding-right: 40px;  /* Space for the spinner */
+}
+
+/* Hide the spinner when it's not in processing */
+.start-analysis-btn.processing .spinner {
+    display: inline-block;
+    margin-left: 10px;
+}
+
+/* Success message style */
+.start-analysis-btn.success {
+    background-color: #28a745; /* Change to green after completion */
+    color: white;
+}
+
+/* Hide spinner after success */
+.start-analysis-btn.success .spinner {
+    display: none;
+}
+
+/* Spinner for processing state */
+.spinner {
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top: 4px solid #fff;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    animation: spin 1s linear infinite;
+    display: inline-block;
+    position: relative;
+}
+
+/* Keyframes for the spinner rotation */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Status messages */
+#status {
+    display: none;
+    margin-top: 20px;
+}
+
+.status-message {
+    color: #007bff;
+    font-weight: 500;
+}
+
+.success-message {
+    color: #28a745;
+}
+
+.error-message {
+    color: #dc3545;
+}
+
+a {
+    color: #1976d2;
+    text-decoration: none;
+    font-weight: bold;
+}
